@@ -4,10 +4,6 @@
 >
 > 项目名称：Level Up for Dynamics 365 / Power Apps
 >
-> 项目仓库：[Kenny-666/Power-Platform-Tool-Kit](https://github.com/Kenny-666/Power-Platform-Tool-Kit)
->
-> 发布下载：[GitHub Releases](https://github.com/Kenny-666/Power-Platform-Tool-Kit/releases)
->
 > 对应版本：**4.1.3**，以当前仓库源码为依据
 >
 > 文档日期：2026 年 10 月 30 日

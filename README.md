@@ -4,6 +4,10 @@
 >
 > 项目名称：Level Up for Dynamics 365 / Power Apps
 >
+> 项目仓库：[Kenny-666/Power-Platform-Tool-Kit](https://github.com/Kenny-666/Power-Platform-Tool-Kit)
+>
+> 发布下载：[GitHub Releases](https://github.com/Kenny-666/Power-Platform-Tool-Kit/releases)
+>
 > 对应版本：**4.1.3**，以当前仓库源码为依据
 >
 > 文档日期：2026 年 10 月 30 日
@@ -75,35 +79,25 @@ flowchart TB
 
 ## 2. 安装、更新与卸载
 
-### 2.1 方式一：加载现成扩展文件
+### 2.1 方式一：加载 GitHub 发布包
 
-本项目当前已有 `build` 目录和 Chromium 发布包。使用现成文件无需安装 Node.js。
+从 [v4.1.3 GitHub Release](https://github.com/Kenny-666/Power-Platform-Tool-Kit/releases/tag/v4.1.3) 下载 Chromium ZIP 安装包。使用发布包无需安装 Node.js。
 
-1. 打开 Microsoft Edge 或 Google Chrome。
-2. 在地址栏输入对应的扩展管理地址：
+1. 下载并解压 `level-up-vnext-chromium-v4.1.3.zip` 到固定位置。
+2. 打开 Microsoft Edge 或 Google Chrome。
+3. 在地址栏输入对应的扩展管理地址：
    - Edge：`edge://extensions/`
    - Chrome：`chrome://extensions/`
-3. 开启“开发人员模式 / Developer mode”。
-4. 点击“加载解压缩的扩展 / Load unpacked”。
-5. 选择以下目录：
+4. 开启“开发人员模式 / Developer mode”。
+5. 点击“加载解压缩的扩展 / Load unpacked”。
+6. 选择解压后的扩展目录（直接包含 `manifest.json` 的文件夹）。
+7. 确认扩展列表出现 **Dynamics 365 工具包.by Kenny Jin**，并处于启用状态。
+8. 在浏览器扩展菜单中把扩展固定到工具栏，方便打开。
+9. 打开已登录的 CRM 页面，刷新页面后再使用扩展。
 
-   ```text
-   D:\Git Source\Levelup-for-Dynamics-CRM\build
-   ```
+**选择的目录里必须直接存在 `manifest.json`。** 不要选择 ZIP 文件、项目根目录或 `src` 目录；`src` 中的 TypeScript / TSX 尚未编译，不能直接作为可运行扩展加载。已加载的目录需要保留，移动或删除会导致扩展失效。
 
-6. 确认扩展列表出现 **Dynamics 365 工具包.by Kenny Jin**，并处于启用状态。
-7. 在浏览器扩展菜单中把扩展固定到工具栏，方便打开。
-8. 打开已登录的 CRM 页面，刷新页面后再使用扩展。
-
-**选择的目录里必须直接存在 `manifest.json`。** 不要选择项目根目录或 `src` 目录；`src` 中的 TypeScript / TSX 尚未编译，不能直接作为可运行扩展加载。
-
-也可以使用仓库中的发布 ZIP：
-
-```text
-release\chromium\4.1.3\level-up-vnext-chromium-v4.1.3.zip
-```
-
-先解压到固定位置，再通过“加载解压缩的扩展”选择解压后包含 `manifest.json` 的文件夹。已加载的目录需要保留，移动或删除会导致扩展失效。现成 ZIP 和 `build` 不一定包含最近的源码修改；要使用当前源码的全部功能，使用下面的构建方式。
+要使用尚未发布的源码修改，请按下面的构建方式自行生成 `build`。
 
 ### 2.2 方式二：从当前源码构建后安装
 
@@ -112,7 +106,7 @@ release\chromium\4.1.3\level-up-vnext-chromium-v4.1.3.zip
 在 PowerShell 中执行：
 
 ```powershell
-Set-Location 'D:\Git Source\Levelup-for-Dynamics-CRM'
+Set-Location '<项目根目录>'
 node --version
 npm --version
 npm ci

@@ -14,6 +14,7 @@ import ActionSection from '#components/ActionSection';
 import Favorites from '#components/Favorites';
 import Impersonation from '#components/Impersonation';
 import InputDialog from '#components/InputDialog';
+import QueryResultsDialog, { QueryResults } from '#components/QueryResultsDialog';
 import LoadingOverlay from '#components/LoadingOverlay';
 import Toast from '#components/Toast';
 import InlineAlert from '#components/InlineAlert';
@@ -22,6 +23,22 @@ import RecentlyUsed from '#components/RecentlyUsed';
 import InformationButton from '#components/InformationButton';
 import LanguageToggle from '#components/LanguageToggle';
 import { LocalizationProvider, useLocalization } from '#localization/LocalizationContext';
+
+const isQueryResults = (value: unknown): value is QueryResults => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const results = value as Partial<QueryResults>;
+  return (
+    typeof results.resultLabel === 'string' &&
+    typeof results.entityName === 'string' &&
+    Array.isArray(results.headers) &&
+    Array.isArray(results.rows) &&
+    typeof results.totalCount === 'number' &&
+    typeof results.isTruncated === 'boolean'
+  );
+};
 
 const App: React.FC = () => {
   const { t } = useLocalization();
@@ -48,6 +65,7 @@ const App: React.FC = () => {
   >('open-by-id');
   const [entityName, setEntityName] = useState('');
   const [recordId, setRecordId] = useState('');
+  const [queryResults, setQueryResults] = useState<QueryResults | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [extensionConfig, setExtensionConfig] = useState<ExtensionConfig>(
@@ -329,7 +347,7 @@ const App: React.FC = () => {
     setLoadingOpen(true);
     try {
       let action = '';
-      let data: Record<string, string> = {};
+      let data: Record<string, unknown> = {};
       switch (dialogType) {
         case 'open-by-id':
           action = 'navigation:open-record-by-id';
@@ -353,16 +371,24 @@ const App: React.FC = () => {
           break;
         case 'fetch-xml':
           action = 'form:execute-fetch-xml';
-          data = { fetchXml: recordId.trim() };
+          data = { fetchXml: recordId.trim(), displayResults: false };
           break;
         case 'sql-query':
           action = 'form:execute-sql-query';
-          data = { sql: recordId.trim() };
+          data = { sql: recordId.trim(), displayResults: false };
           break;
       }
 
       const response = await messageService.sendMessage(action as DynamicsAction, data);
       if (response.success) {
+        const actionResponse = response.data as { data?: unknown } | undefined;
+        if (
+          (dialogType === 'fetch-xml' || dialogType === 'sql-query') &&
+          isQueryResults(actionResponse?.data)
+        ) {
+          setQueryResults(actionResponse.data);
+        }
+
         let successMessage = '';
         switch (dialogType) {
           case 'open-by-id':
@@ -569,6 +595,7 @@ const App: React.FC = () => {
         onEntityNameChange={setEntityName}
         onRecordIdChange={setRecordId}
       />
+      <QueryResultsDialog results={queryResults} onClose={() => setQueryResults(null)} />
       <LoadingOverlay open={loadingOpen} />
       <Toast
         open={toastOpen}

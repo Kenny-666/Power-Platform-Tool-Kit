@@ -15,7 +15,7 @@ describe('convertSqlToFetchXml', () => {
 
   it('converts IN and NULL conditions', () => {
     const result = convertSqlToFetchXml(
-      "SELECT name FROM contact WHERE statuscode IN (1, 2) OR parentcustomerid IS NULL"
+      'SELECT name FROM contact WHERE statuscode IN (1, 2) OR parentcustomerid IS NULL'
     );
 
     expect(result.fetchXml).toBe(
@@ -23,11 +23,20 @@ describe('convertSqlToFetchXml', () => {
     );
   });
 
+  it('normalizes whitespace around SELECT * before converting to FetchXML', () => {
+    const result = convertSqlToFetchXml('SELECT TOP 1* from new_srv_claimpart');
+
+    expect(result).toEqual({
+      entityName: 'new_srv_claimpart',
+      fetchXml:
+        '<fetch top="1"><entity name="new_srv_claimpart"><all-attributes /></entity></fetch>',
+    });
+  });
+
   it.each([
-    'UPDATE account SET name = \'Contoso\'',
-    'SELECT * FROM account',
+    "UPDATE account SET name = 'Contoso'",
     'SELECT name FROM account; DELETE FROM account',
-    'SELECT name FROM account WHERE statecode = 0 AND name = \'Contoso\' OR accountnumber = \'1\'',
+    "SELECT name FROM account WHERE statecode = 0 AND name = 'Contoso' OR accountnumber = '1'",
   ])('rejects unsupported SQL: %s', sql => {
     expect(() => convertSqlToFetchXml(sql)).toThrow();
   });

@@ -439,8 +439,15 @@ export class FormActions {
   }
 
   async executeFetchXml(
-    data: { fetchXml?: string; resultLabel?: string }
-  ): Promise<string> {
+    data: { fetchXml?: string; resultLabel?: string; displayResults?: boolean }
+  ): Promise<{
+    resultLabel: string;
+    entityName: string;
+    headers: string[];
+    rows: string[][];
+    totalCount: number;
+    isTruncated: boolean;
+  }> {
     const fetchXml = data?.fetchXml?.trim();
     const resultLabel = data?.resultLabel ?? 'FetchXML';
     if (!fetchXml) {
@@ -473,31 +480,54 @@ export class FormActions {
       })
     );
 
-    DynamicsUtils.createMuiPopup({
-      id: 'levelup-fetchxml-results-popup',
-      title: `${resultLabel} Results (${result.totalCount})`,
-      tables: [
-        {
-          title: entityName,
-          headers: headers.length > 0 ? headers : ['Result'],
-          rows: rows.length > 0 ? rows : [['No records returned']],
-          description: entities.length > 100 ? 'Showing the first 100 returned records.' : undefined,
-        },
-      ],
-      enableSearch: true,
-      showOpenInNewTab: true,
-    });
-    return `${resultLabel} returned ${result.totalCount} record(s)`;
+    const queryResults = {
+      resultLabel,
+      entityName,
+      headers: headers.length > 0 ? headers : ['Result'],
+      rows: rows.length > 0 ? rows : [['No records returned']],
+      totalCount: result.totalCount,
+      isTruncated: entities.length > 100,
+    };
+
+    if (data.displayResults !== false) {
+      DynamicsUtils.createMuiPopup({
+        id: 'levelup-fetchxml-results-popup',
+        title: `${resultLabel} Results (${result.totalCount})`,
+        tables: [
+          {
+            title: queryResults.entityName,
+            headers: queryResults.headers,
+            rows: queryResults.rows,
+            description: queryResults.isTruncated ? 'Showing the first 100 returned records.' : undefined,
+          },
+        ],
+        enableSearch: true,
+        showOpenInNewTab: true,
+      });
+    }
+
+    return queryResults;
   }
 
-  async executeSqlQuery(data: { sql?: string }): Promise<string> {
+  async executeSqlQuery(data: { sql?: string; displayResults?: boolean }): Promise<{
+    resultLabel: string;
+    entityName: string;
+    headers: string[];
+    rows: string[][];
+    totalCount: number;
+    isTruncated: boolean;
+  }> {
     const sql = data?.sql?.trim();
     if (!sql) {
       throw new Error('SQL query is required');
     }
 
     const { fetchXml } = convertSqlToFetchXml(sql);
-    return this.executeFetchXml({ fetchXml, resultLabel: 'SQL Query' });
+    return this.executeFetchXml({
+      fetchXml,
+      resultLabel: 'SQL Query',
+      displayResults: data.displayResults,
+    });
   }
 
   /**v

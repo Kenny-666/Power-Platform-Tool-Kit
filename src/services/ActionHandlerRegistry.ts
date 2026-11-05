@@ -75,12 +75,18 @@ export class ActionHandlerRegistry {
       {
         action: 'form:execute-fetch-xml',
         contentScriptMethod: 'executeFetchXml',
-        dataExtractor: data => ({ fetchXml: (data as { fetchXml?: string })?.fetchXml }),
+        dataExtractor: data => ({
+          fetchXml: (data as { fetchXml?: string })?.fetchXml,
+          displayResults: (data as { displayResults?: boolean })?.displayResults,
+        }),
       },
       {
         action: 'form:execute-sql-query',
         contentScriptMethod: 'executeSqlQuery',
-        dataExtractor: data => ({ sql: (data as { sql?: string })?.sql }),
+        dataExtractor: data => ({
+          sql: (data as { sql?: string })?.sql,
+          displayResults: (data as { displayResults?: boolean })?.displayResults,
+        }),
       },
       { action: 'form:show-entity-info', contentScriptMethod: 'showEntityInfo' },
       {

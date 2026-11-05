@@ -75,6 +75,13 @@ function splitOutsideQuotes(value: string, separator: string): string[] {
   return results;
 }
 
+function normalizeWildcardSelect(sql: string): string {
+  return sql.replace(
+    /^(\s*SELECT)(\s+TOP\s*\(?\s*\d+\s*\)?)?\s*\*\s*FROM\b/i,
+    (_, select, top = '') => `${select}${top} * FROM`
+  );
+}
+
 function parseSqlValue(value: string): string {
   const trimmed = value.trim();
   if (trimmed.length >= 2 && trimmed.startsWith("'") && trimmed.endsWith("'")) {
@@ -167,26 +174,31 @@ function renderCondition(condition: SqlCondition): string {
 
 /** Converts a limited, read-only SQL SELECT query into Dataverse FetchXML. */
 export function convertSqlToFetchXml(sql: string): { entityName: string; fetchXml: string } {
-  const normalizedSql = sql.trim().replace(/;\s*$/, '');
+  const normalizedSql = normalizeWildcardSelect(sql.trim().replace(/;\s*$/, ''));
   if (!normalizedSql || /;/.test(normalizedSql)) {
     throw new Error('Enter one SQL SELECT statement without semicolons');
   }
 
-  const queryMatch = /^SELECT\s+(?:(?:TOP\s*\(?\s*(\d+)\s*\)?\s+))?(.+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+?))?(?:\s+ORDER\s+BY\s+(.+))?$/i.exec(normalizedSql);
+  const queryMatch =
+    /^SELECT\s+(?:(?:TOP\s*\(?\s*(\d+)\s*\)?\s+))?(.+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+?))?(?:\s+ORDER\s+BY\s+(.+))?$/i.exec(
+      normalizedSql
+    );
   if (!queryMatch) {
     throw new Error('Only SELECT queries with FROM are supported');
   }
 
   const [, topValue, selectClause, entityNameValue, whereClause, orderByClause] = queryMatch;
   const entityName = assertLogicalName(entityNameValue, 'table name');
-  if (selectClause.trim() === '*') {
-    throw new Error('SELECT * is not supported; specify logical field names');
-  }
-
-  const attributes = splitOutsideQuotes(selectClause, ',').map(attribute =>
-    assertLogicalName(attribute.trim(), 'field name')
-  );
-  if (attributes.length === 0 || attributes.some(attribute => !attribute)) {
+  const selectsAllAttributes = selectClause.trim() === '*';
+  const attributes = selectsAllAttributes
+    ? []
+    : splitOutsideQuotes(selectClause, ',').map(attribute =>
+        assertLogicalName(attribute.trim(), 'field name')
+      );
+  if (
+    !selectsAllAttributes &&
+    (attributes.length === 0 || attributes.some(attribute => !attribute))
+  ) {
     throw new Error('SELECT must specify at least one field');
   }
 
@@ -209,12 +221,17 @@ export function convertSqlToFetchXml(sql: string): { entityName: string; fetchXm
   }
 
   const topAttribute = top ? ` top="${top}"` : '';
-  const attributeXml = attributes.map(attribute => `<attribute name="${escapeXml(attribute)}" />`).join('');
+  const attributeXml = selectsAllAttributes
+    ? '<all-attributes />'
+    : attributes.map(attribute => `<attribute name="${escapeXml(attribute)}" />`).join('');
   const filterXml = filter
     ? `<filter type="${filter.type}">${filter.conditions.map(renderCondition).join('')}</filter>`
     : '';
   const orderXml = orders
-    .map(order => `<order attribute="${escapeXml(order.attribute)}" descending="${order.descending}" />`)
+    .map(
+      order =>
+        `<order attribute="${escapeXml(order.attribute)}" descending="${order.descending}" />`
+    )
     .join('');
 
   return {

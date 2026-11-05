@@ -86,6 +86,10 @@ const PopupApp: React.FC = () => {
         const fetchXml = prompt('FetchXML');
         if (!fetchXml) return; // User cancelled
         actionData = { fetchXml: fetchXml.trim() };
+      } else if (actionId === 'form:execute-sql-query') {
+        const sql = prompt('SQL Query');
+        if (!sql) return; // User cancelled
+        actionData = { sql: sql.trim() };
       }
 
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

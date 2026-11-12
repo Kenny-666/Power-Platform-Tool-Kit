@@ -47,20 +47,50 @@
   text-decoration: none;
 }
 
-/* Theme switch neutral styling in bottom bar */
-.sidebar-status-bar .MuiButton-root {
-  min-width: 36px;
-  padding: 6px;
-  border-radius: 14px;
+.pixel-toggle-tooltip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
 }
-.sidebar-status-bar .MuiButton-contained {
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--text-primary);
-  box-shadow: none;
+
+.pixel-toggle {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 16%;
+  background: transparent;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
-.sidebar-status-bar .MuiButton-outlined {
-  border-color: rgba(0, 0, 0, 0.12);
-  color: var(--text-primary);
+
+.pixel-toggle:active {
+  cursor: grabbing;
+}
+
+.pixel-toggle:focus-visible {
+  outline: 2px solid #0078d4;
+  outline-offset: 3px;
+}
+
+.pixel-toggle__webgl,
+.pixel-toggle__effects {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pixel-toggle__effects {
+  z-index: 1;
 }
 /* Level Up Extension - Modern Fluent UI Design with Theme Support */
 :root {

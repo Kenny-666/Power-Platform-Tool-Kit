@@ -1,9 +1,9 @@
 import React from 'react';
-import { AppBar, Toolbar, IconButton, Tooltip, Box } from '@mui/material';
-import { LightMode as LightModeIcon, DarkMode as DarkModeIcon } from '@mui/icons-material';
+import { AppBar, Toolbar, Tooltip, Box } from '@mui/material';
 import { useTheme } from '#contexts/ThemeContext';
 import DisplayModeSelector from './DisplayModeSelector';
 import { ExtensionDisplayMode } from '#types/global';
+import PixelToggle from './PixelToggle';
 
 interface HeaderProps {
   displayMode: ExtensionDisplayMode;
@@ -27,19 +27,19 @@ const HeaderComponent: React.FC<HeaderProps> = ({ displayMode, onDisplayModeChan
           <DisplayModeSelector currentMode={displayMode} onModeChange={onDisplayModeChange} />
 
           <Tooltip title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}>
-            <IconButton
-              onClick={toggleTheme}
-              size='small'
-              aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
-              sx={{
-                color: 'text.primary',
-                '&:hover': {
-                  backgroundColor: 'action.hover',
-                },
-              }}
-            >
-              {isDarkMode ? <LightModeIcon fontSize='small' /> : <DarkModeIcon fontSize='small' />}
-            </IconButton>
+            <span className='pixel-toggle-tooltip'>
+              <PixelToggle
+                options={{
+                  checked: !isDarkMode,
+                  height: 40,
+                  transparent: true,
+                  onCheckedChange: checked => {
+                    if (checked === isDarkMode) toggleTheme();
+                  },
+                }}
+                aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              />
+            </span>
           </Tooltip>
         </Box>
       </Toolbar>
@@ -50,4 +50,3 @@ const HeaderComponent: React.FC<HeaderProps> = ({ displayMode, onDisplayModeChan
 const Header = React.memo(HeaderComponent);
 
 export default Header;
-

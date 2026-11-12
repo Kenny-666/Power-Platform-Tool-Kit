@@ -2,8 +2,6 @@
 
 > 软件名称：**Dynamics 365 工具包.by Kenny Jin**
 >
-> 项目名称：Level Up for Dynamics 365 / Power Apps
->
 > 对应版本：**4.1.3**，以当前仓库源码为依据
 >
 > 文档日期：2026 年 11 月 5 日

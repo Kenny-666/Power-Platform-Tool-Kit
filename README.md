@@ -75,9 +75,9 @@ flowchart TB
 
 ### 2.1 方式一：加载 GitHub 发布包
 
-从 [v4.1.3 GitHub Release](https://github.com/Kenny-666/Power-Platform-Tool-Kit/releases/tag/v4.1.3) 下载 Chromium ZIP 安装包。使用发布包无需安装 Node.js。
+从 Release 下载 Chromium ZIP 安装包。使用发布包无需安装 Node.js。
 
-1. 下载发布页中标记为 **Dynamics 365 Tool Box** 的 Chromium ZIP（下载文件名为 `Dynamics.365.Tool.Box.zip`），并解压到固定位置。
+1. 下载发布页中标记为 **Dynamics 365 Tool Box** 的 Chromium ZIP，并解压到固定位置。
 2. 打开 Microsoft Edge 或 Google Chrome。
 3. 在地址栏输入对应的扩展管理地址：
    - Edge：`edge://extensions/`

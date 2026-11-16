@@ -98,6 +98,16 @@ export class ActionHandlerRegistry {
       { action: 'form:clear-field-notifications', contentScriptMethod: 'clearFieldNotifications' },
       { action: 'form:refresh-ribbon', contentScriptMethod: 'refreshRibbon' },
       { action: 'form:toggle-lookup-links', contentScriptMethod: 'toggleLookupLinks' },
+      {
+        action: 'form:analyze-record-access',
+        contentScriptMethod: 'analyzeRecordAccess',
+        dataExtractor: data => ({
+          userId: (data as { userId?: string })?.userId,
+          userName: (data as { userName?: string })?.userName,
+          comparisonUser: (data as { comparisonUser?: { userId: string; userName: string } })
+            ?.comparisonUser,
+        }),
+      },
     ];
 
     this.registerHandlers(formConfigs);

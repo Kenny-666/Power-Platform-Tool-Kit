@@ -4,6 +4,10 @@
 
 import { WebApiClient } from './webapi-client';
 import { DynamicsUtils } from './utils';
+import { securityT } from './security-localization';
+import { collectRecordAccessReport } from './record-access-analysis';
+import { createAccessReportTables, downloadRedactedAccessReport } from './record-access-report';
+import { accessT } from './record-access-localization';
 
 interface ImpersonationUser {
   systemuserid: string;
@@ -33,15 +37,20 @@ interface SecurityRoleMembership {
   roleName: string;
 }
 
+interface RecordAccessAnalysisUser {
+  userId: string;
+  userName: string;
+}
+
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const validateIds = (ids: string[]): string[] => {
   if (!Array.isArray(ids) || ids.length === 0) {
-    throw new Error('Select at least one user or security role.');
+    throw new Error(securityT('Select at least one user or security role.'));
   }
 
   if (ids.length > 100 || ids.some(id => !GUID_PATTERN.test(id))) {
-    throw new Error('The selected user or security role identifiers are invalid.');
+    throw new Error(securityT('The selected user or security role identifiers are invalid.'));
   }
 
   return ids;
@@ -109,7 +118,7 @@ export class AdminActions {
           .filter(team => team.name)
           .map(team => ({ id: team.teamid ?? '', name: team.name ?? '' }));
       } catch (error) {
-        teamsError = error instanceof Error ? error.message : 'Unable to retrieve teams';
+        teamsError = error instanceof Error ? error.message : securityT('Unable to retrieve teams');
       }
 
       const userInfo = {
@@ -123,31 +132,33 @@ export class AdminActions {
 
       DynamicsUtils.createMuiPopup({
         id: 'levelup-current-user-info',
-        title: 'Current User Information',
+        title: securityT('Current User Information'),
         tables: [
           {
-            title: 'User',
-            headers: ['Property', 'Value'],
+            title: securityT('User'),
+            headers: [securityT('Property'), securityT('Value')],
             rows: [
-              ['Name', userInfo.userName],
-              ['User ID', userInfo.userId],
-              ['Language ID', String(userInfo.languageId)],
+              [securityT('Name'), userInfo.userName],
+              [securityT('User ID'), userInfo.userId],
+              [securityT('Language ID'), String(userInfo.languageId)],
             ],
           },
           {
-            title: 'Security Roles',
-            headers: ['Name', 'ID'],
+            title: securityT('Security Roles'),
+            headers: [securityT('Name'), 'ID'],
             rows: securityRoles.map(role => [role.name, role.id]),
             description:
-              securityRoles.length === 0 ? 'No security roles were returned.' : undefined,
+              securityRoles.length === 0
+                ? securityT('No security roles were returned.')
+                : undefined,
           },
           {
-            title: 'Teams',
-            headers: ['Name', 'ID'],
+            title: securityT('Teams'),
+            headers: [securityT('Name'), 'ID'],
             rows:
               teams.length > 0
                 ? teams.map(team => [team.name, team.id])
-                : [[teamsError ?? 'No teams found', '']],
+                : [[teamsError ?? securityT('No teams found'), '']],
           },
         ],
         layoutMode: 'dual-pane',
@@ -342,7 +353,7 @@ export class AdminActions {
     ids: string[]
   ): Promise<{ displayedCount: number }> {
     if (mode !== 'users-to-roles' && mode !== 'roles-to-users') {
-      throw new Error('The membership lookup mode is invalid.');
+      throw new Error(securityT('The membership lookup mode is invalid.'));
     }
 
     const values = validateIds(ids)
@@ -391,26 +402,32 @@ export class AdminActions {
 
     DynamicsUtils.createMuiPopup({
       id: 'levelup-security-role-memberships',
-      title: mode === 'users-to-roles' ? 'User to Roles' : 'Role to Users',
+      title: securityT(mode === 'users-to-roles' ? 'User to Roles' : 'Role to Users'),
       tables: Array.from(groups.values()).map(group => ({
         title: group.email ? `${group.name} (${group.email})` : group.name,
         headers:
-          mode === 'users-to-roles' ? ['Security Role', 'Role ID'] : ['User', 'Email', 'User ID'],
+          mode === 'users-to-roles'
+            ? [securityT('Security Role'), securityT('Role ID')]
+            : [securityT('User'), securityT('Email'), securityT('User ID')],
         rows:
           mode === 'users-to-roles'
             ? group.memberships.map(membership => [
-                membership.roleName || 'No direct security roles',
+                membership.roleName || securityT('No direct security roles'),
                 membership.roleId,
               ])
             : group.memberships.map(membership => [
-                membership.userName || 'No directly assigned users',
+                membership.userName || securityT('No directly assigned users'),
                 membership.userEmail,
                 membership.userId,
               ]),
         description:
           mode === 'users-to-roles'
-            ? `${group.memberships.filter(membership => membership.roleId).length} directly assigned role(s)`
-            : `${group.memberships.filter(membership => membership.userId).length} directly assigned user(s)`,
+            ? securityT('{count} directly assigned role(s)', {
+                count: group.memberships.filter(membership => membership.roleId).length,
+              })
+            : securityT('{count} directly assigned user(s)', {
+                count: group.memberships.filter(membership => membership.userId).length,
+              }),
       })),
       layoutMode: 'dual-pane',
       enableSearch: true,
@@ -418,6 +435,45 @@ export class AdminActions {
     });
 
     return { displayedCount: groups.size };
+  }
+
+  /** Analyze one or two users without allowing optional evidence failures to abort the report. */
+  static async analyzeRecordAccess(
+    entityName: string,
+    recordId: string,
+    user: RecordAccessAnalysisUser,
+    comparisonUser?: RecordAccessAnalysisUser
+  ): Promise<{ accessRights: string }> {
+    const report = await collectRecordAccessReport(
+      entityName,
+      recordId,
+      comparisonUser ? [user, comparisonUser] : [user]
+    );
+    DynamicsUtils.createMuiPopup({
+      id: 'levelup-record-access-analysis',
+      title: securityT('Access Analysis: {user}', {
+        user: report.users.map(item => item.user.userName).join(' / '),
+      }),
+      tables: createAccessReportTables(report),
+      layoutMode: 'dual-pane',
+      enableSearch: true,
+      showOpenInNewTab: true,
+      actions: [
+        {
+          label: accessT('export'),
+          onClick: () => {
+            void downloadRedactedAccessReport(report).catch(error => {
+              DynamicsUtils.showToast(
+                error instanceof Error ? error.message : securityT('Unknown'),
+                'error'
+              );
+            });
+          },
+        },
+      ],
+    });
+    const rights = report.users[0].rights;
+    return { accessRights: rights.status === 'ok' ? rights.data.join(', ') : '' };
   }
 
   /**

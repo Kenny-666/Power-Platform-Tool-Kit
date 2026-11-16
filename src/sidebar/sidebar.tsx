@@ -23,6 +23,7 @@ import RecentlyUsed from '#components/RecentlyUsed';
 import InformationButton from '#components/InformationButton';
 import LanguageToggle from '#components/LanguageToggle';
 import SecurityRoleMembershipDialog from '#components/SecurityRoleMembershipDialog';
+import RecordAccessAnalysisDialog from '#components/RecordAccessAnalysisDialog';
 import { LocalizationProvider, useLocalization } from '#localization/LocalizationContext';
 
 const isQueryResults = (value: unknown): value is QueryResults => {
@@ -77,6 +78,7 @@ const App: React.FC = () => {
   const [securityRoleLookupMode, setSecurityRoleLookupMode] = useState<
     'users-to-roles' | 'roles-to-users' | null
   >(null);
+  const [recordAccessAnalysisOpen, setRecordAccessAnalysisOpen] = useState(false);
 
   // Function to show inline alert for critical messages
   const showInlineAlert = (
@@ -276,6 +278,10 @@ const App: React.FC = () => {
       setSecurityRoleLookupMode(
         id === 'admin:bulk-user-roles' ? 'users-to-roles' : 'roles-to-users'
       );
+      return;
+    }
+    if (id === 'form:analyze-record-access') {
+      setRecordAccessAnalysisOpen(true);
       return;
     }
     if (id === 'navigation:new-record') {
@@ -610,6 +616,10 @@ const App: React.FC = () => {
       <SecurityRoleMembershipDialog
         mode={securityRoleLookupMode}
         onClose={() => setSecurityRoleLookupMode(null)}
+      />
+      <RecordAccessAnalysisDialog
+        open={recordAccessAnalysisOpen}
+        onClose={() => setRecordAccessAnalysisOpen(false)}
       />
       <LoadingOverlay open={loadingOpen} />
       <Toast

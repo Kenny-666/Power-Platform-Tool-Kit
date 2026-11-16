@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { messageService } from '#services/MessageService';
+import { useLocalization } from '#localization/LocalizationContext';
 
 type LookupMode = 'users-to-roles' | 'roles-to-users';
 
@@ -32,6 +33,7 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
   mode,
   onClose,
 }) => {
+  const { t } = useLocalization();
   const [inputValue, setInputValue] = useState('');
   const [options, setOptions] = useState<LookupOption[]>([]);
   const [selected, setSelected] = useState<LookupOption[]>([]);
@@ -40,8 +42,8 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
   const [error, setError] = useState<string | null>(null);
 
   const isUserLookup = mode === 'users-to-roles';
-  const title = isUserLookup ? '批量用户查角色' : '批量角色查用户';
-  const inputLabel = isUserLookup ? '搜索并选择用户' : '搜索并选择安全角色';
+  const title = t(isUserLookup ? 'securityBulkUserRoles' : 'securityBulkRoleUsers');
+  const inputLabel = t(isUserLookup ? 'securitySelectUsers' : 'securitySelectRoles');
 
   useEffect(() => {
     setInputValue('');
@@ -67,7 +69,7 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
           { query }
         );
         if (!response.success) {
-          throw new Error(response.error || 'Search failed.');
+          throw new Error(response.error || t('securitySearchFailed'));
         }
 
         if (!cancelled) {
@@ -86,14 +88,14 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
               (data.data ?? []).map(role => ({
                 id: role.roleid,
                 label: role.name,
-                detail: role.businessUnitName ? `业务部门：${role.businessUnitName}` : undefined,
+                detail: role.businessUnitName,
               }))
             );
           }
         }
       } catch (searchError) {
         if (!cancelled) {
-          setError(searchError instanceof Error ? searchError.message : 'Search failed.');
+          setError(searchError instanceof Error ? searchError.message : t('securitySearchFailed'));
         }
       } finally {
         if (!cancelled) {
@@ -106,11 +108,11 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [inputValue, isUserLookup, mode]);
+  }, [inputValue, isUserLookup, mode, t]);
 
   const handleViewMemberships = async () => {
     if (!mode || selected.length === 0) {
-      setError(`请至少选择一个${isUserLookup ? '用户' : '安全角色'}。`);
+      setError(t('securitySelectionRequired'));
       return;
     }
 
@@ -121,15 +123,14 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
         mode,
         ids: selected.map(option => option.id),
       });
-      if (!response.success) {
-        throw new Error(response.error || 'Unable to retrieve memberships.');
+      const result = response.data as { success?: boolean; error?: string } | undefined;
+      if (!response.success || result?.success === false) {
+        throw new Error(result?.error || response.error || t('securityMembershipFailed'));
       }
 
       onClose();
     } catch (lookupError) {
-      setError(
-        lookupError instanceof Error ? lookupError.message : 'Unable to retrieve memberships.'
-      );
+      setError(lookupError instanceof Error ? lookupError.message : t('securityMembershipFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -140,9 +141,7 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>
         <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-          {isUserLookup
-            ? '选择多个用户，查看其直接分配的安全角色。'
-            : '选择多个安全角色，查看直接分配该角色的用户。'}
+          {t(isUserLookup ? 'securityUserRolesHelp' : 'securityRoleUsersHelp')}
         </Typography>
         <Autocomplete
           multiple
@@ -154,14 +153,21 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
           getOptionLabel={option => option.label}
           isOptionEqualToValue={(option, value) => option.id === value.id}
           filterOptions={items => items}
+          clearText={t('securityClearSelection')}
+          openText={t('securityOpenOptions')}
+          closeText={t('securityCloseOptions')}
           loading={isSearching}
+          loadingText={t('securitySearching')}
+          noOptionsText={t('securityNoResults')}
           renderOption={(props, option) => (
             <li {...props} key={option.id}>
               <Box>
                 <Typography variant='body2'>{option.label}</Typography>
                 {option.detail && (
                   <Typography variant='caption' color='text.secondary'>
-                    {option.detail}
+                    {isUserLookup
+                      ? option.detail
+                      : t('securityBusinessUnit', { name: option.detail })}
                   </Typography>
                 )}
               </Box>
@@ -171,8 +177,8 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
             <TextField
               {...params}
               label={inputLabel}
-              placeholder='输入至少两个字符'
-              helperText='输入关键字后从搜索结果中多选。最多可选择 100 项。'
+              placeholder={t('securitySearchMinimum')}
+              helperText={t('securityMultiSelectHelp')}
               slotProps={{
                 input: {
                   ...params.InputProps,
@@ -199,13 +205,13 @@ const SecurityRoleMembershipDialog: React.FC<SecurityRoleMembershipDialogProps> 
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t('close')}</Button>
         <Button
           variant='contained'
           onClick={handleViewMemberships}
           disabled={isLoading || selected.length === 0}
         >
-          {isLoading ? '正在查询...' : '查看关系'}
+          {t(isLoading ? 'securityLoading' : 'securityViewRelationships')}
         </Button>
       </DialogActions>
     </Dialog>

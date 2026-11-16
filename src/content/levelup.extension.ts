@@ -100,6 +100,16 @@ export class LevelUpExtension {
       { actionName: 'clear-field-notifications', method: 'clearFieldNotifications' },
       { actionName: 'refresh-ribbon', method: 'refreshRibbon' },
       { actionName: 'toggle-lookup-links', method: 'toggleLookupLinks' },
+      {
+        actionName: 'analyze-record-access',
+        method: 'analyzeRecordAccess',
+        dataTransformer: data =>
+          data as {
+            userId: string;
+            userName: string;
+            comparisonUser?: { userId: string; userName: string };
+          },
+      },
     ];
   }
 

@@ -8,6 +8,7 @@ import { ConfettiEffects } from './confetti-effects';
 import { OptionSetData, OptionSetControl, OptionSetOption } from '#types/global';
 import { contentT } from './localization';
 import { convertSqlToFetchXml } from './sql-to-fetchxml';
+import { AdminActions } from './admin-actions';
 
 interface Solution {
   uniquename: string;
@@ -271,7 +272,10 @@ export class FormActions {
           headers: ['Property', 'Value'],
           rows: [
             ['Logical Name', logicalName],
-            ['Entity Set Name', metadata?.EntitySetName ?? DynamicsUtils.getEntityCollectionName(logicalName)],
+            [
+              'Entity Set Name',
+              metadata?.EntitySetName ?? DynamicsUtils.getEntityCollectionName(logicalName),
+            ],
             ['Object Type Code', String(metadata?.ObjectTypeCode ?? 'Unavailable')],
           ],
         },
@@ -301,7 +305,8 @@ export class FormActions {
         .map(lookup => `${lookup.name ?? '(unnamed)'} (${lookup.entityType}: ${lookup.id})`)
         .join(', ');
     } else {
-      displayValue = textAttribute.getText?.() ?? (typeof value === 'string' ? value : JSON.stringify(value));
+      displayValue =
+        textAttribute.getText?.() ?? (typeof value === 'string' ? value : JSON.stringify(value));
     }
 
     DynamicsUtils.createMuiPopup({
@@ -329,8 +334,9 @@ export class FormActions {
 
     xrm.Page.data.entity.attributes.get().forEach(attribute => {
       const logicalName = attribute.getName();
-      const label = document.querySelector(`label[id$="${logicalName}-field-label"]`) as HTMLElement | null
-        ?? contentWindow?.document.querySelector(`#${logicalName}_c`) as HTMLElement | null;
+      const label =
+        (document.querySelector(`label[id$="${logicalName}-field-label"]`) as HTMLElement | null) ??
+        (contentWindow?.document.querySelector(`#${logicalName}_c`) as HTMLElement | null);
       if (!label || label.dataset.levelupCopyLogicalName === 'true') {
         return;
       }
@@ -438,9 +444,11 @@ export class FormActions {
     return `Added lookup links to ${addedCount} field(s)`;
   }
 
-  async executeFetchXml(
-    data: { fetchXml?: string; resultLabel?: string; displayResults?: boolean }
-  ): Promise<{
+  async executeFetchXml(data: {
+    fetchXml?: string;
+    resultLabel?: string;
+    displayResults?: boolean;
+  }): Promise<{
     resultLabel: string;
     entityName: string;
     headers: string[];
@@ -454,7 +462,10 @@ export class FormActions {
       throw new Error('FetchXML is required');
     }
 
-    const documentElement = new DOMParser().parseFromString(fetchXml, 'application/xml').documentElement;
+    const documentElement = new DOMParser().parseFromString(
+      fetchXml,
+      'application/xml'
+    ).documentElement;
     if (documentElement.nodeName === 'parsererror' || documentElement.nodeName !== 'fetch') {
       throw new Error('FetchXML must contain a valid <fetch> root element');
     }
@@ -468,7 +479,9 @@ export class FormActions {
       fetchXml
     );
     const entities = (result.entities ?? []) as Array<Record<string, unknown>>;
-    const headers = Array.from(new Set(entities.flatMap(entity => Object.keys(entity).filter(key => !key.includes('@')))));
+    const headers = Array.from(
+      new Set(entities.flatMap(entity => Object.keys(entity).filter(key => !key.includes('@'))))
+    );
     const rows = entities.slice(0, 100).map(entity =>
       headers.map(header => {
         const value = entity[header];
@@ -498,7 +511,9 @@ export class FormActions {
             title: queryResults.entityName,
             headers: queryResults.headers,
             rows: queryResults.rows,
-            description: queryResults.isTruncated ? 'Showing the first 100 returned records.' : undefined,
+            description: queryResults.isTruncated
+              ? 'Showing the first 100 returned records.'
+              : undefined,
           },
         ],
         enableSearch: true,
@@ -700,6 +715,21 @@ export class FormActions {
     return recordId;
   }
 
+  async analyzeRecordAccess(user: {
+    userId: string;
+    userName: string;
+    comparisonUser?: { userId: string; userName: string };
+  }): Promise<unknown> {
+    if (!user?.userId) {
+      throw new Error('A user is required for access analysis.');
+    }
+
+    const xrm = this.getXrm();
+    const entityName = xrm.Page.data.entity.getEntityName();
+    const recordId = xrm.Page.data.entity.getId().replace(/[{}]/g, '');
+    return AdminActions.analyzeRecordAccess(entityName, recordId, user, user.comparisonUser);
+  }
+
   /**
    * Open current record in Web API
    */
@@ -881,15 +911,15 @@ export class FormActions {
         const attributeCollection = metadata.Attributes as unknown;
         const attributes = Array.isArray(attributeCollection)
           ? (attributeCollection as AttributeDisplayMetadata[])
-          : (attributeCollection as { get?: () => AttributeDisplayMetadata[] })?.get?.() ?? [];
+          : ((attributeCollection as { get?: () => AttributeDisplayMetadata[] })?.get?.() ?? []);
         attributes.forEach(attribute => {
           const logicalName = attribute.LogicalName;
           const metadataDisplayName = attribute.DisplayName;
           const displayName =
             typeof metadataDisplayName === 'string'
               ? metadataDisplayName
-              : metadataDisplayName?.UserLocalizedLabel?.Label ??
-                metadataDisplayName?.LocalizedLabels?.[0]?.Label;
+              : (metadataDisplayName?.UserLocalizedLabel?.Label ??
+                metadataDisplayName?.LocalizedLabels?.[0]?.Label);
           if (logicalName && displayName) {
             displayNames.set(logicalName, displayName);
           }
@@ -947,11 +977,7 @@ export class FormActions {
           }
 
           // Add all fields regardless of value
-          rows.push([
-            displayNames.get(logicalName) ?? logicalName,
-            logicalName,
-            displayValue,
-          ]);
+          rows.push([displayNames.get(logicalName) ?? logicalName, logicalName, displayValue]);
         } catch {
           const logicalName = getLogicalAttributeName(key) ?? key;
           rows.push([logicalName, logicalName, '[Error reading value]']);
@@ -1045,7 +1071,10 @@ export class FormActions {
         ]);
         return true;
       } catch (error) {
-        console.warn(`Unable to populate lookup field ${attribute.getName()} for ${target}:`, error);
+        console.warn(
+          `Unable to populate lookup field ${attribute.getName()} for ${target}:`,
+          error
+        );
       }
     }
 
@@ -1086,7 +1115,9 @@ export class FormActions {
           break;
         }
         case 'lookup':
-          if (await this.populateLookupAttribute(attribute as Xrm.Attributes.LookupAttribute, xrm)) {
+          if (
+            await this.populateLookupAttribute(attribute as Xrm.Attributes.LookupAttribute, xrm)
+          ) {
             populatedCount++;
           }
           break;
@@ -1151,7 +1182,9 @@ export class FormActions {
     } catch (classicEditorError) {
       if (isOnPremises(globalContext)) {
         const errorMessage =
-          classicEditorError instanceof Error ? classicEditorError.message : 'Unknown error occurred';
+          classicEditorError instanceof Error
+            ? classicEditorError.message
+            : 'Unknown error occurred';
         DynamicsUtils.showToast(`Failed to open form editor: ${errorMessage}`, 'error');
         throw new Error(`Failed to open form editor: ${errorMessage}`);
       }

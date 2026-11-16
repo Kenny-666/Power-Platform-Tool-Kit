@@ -43,7 +43,8 @@ export type FormActionName =
     | 'enable-label-copy'
     | 'clear-field-notifications'
     | 'refresh-ribbon'
-    | 'toggle-lookup-links';
+    | 'toggle-lookup-links'
+    | 'analyze-record-access';
 
 export type NavigationActionName =
     | 'open-record-by-id'

@@ -1,4 +1,5 @@
 import { contentT } from './localization';
+import { securityT } from './security-localization';
 
 /**
  * Lightweight table dialog component for Level Up extension
@@ -18,6 +19,7 @@ export interface DialogOptions {
   title: string;
   tables: TableData[];
   onClose?: () => void;
+  actions?: Array<{ label: string; onClick: () => void }>;
   // Enhanced options for large datasets
   layoutMode?: 'standard' | 'dual-pane' | 'compact';
   showOpenInNewTab?: boolean;
@@ -1117,10 +1119,17 @@ export class TableDialog {
     if (options.showOpenInNewTab !== false) {
       headerActions += `
         <button class="levelup-dialog-action-btn" data-action="open-new-tab" title="${contentT('openInNewTab')}">
-          <span>↗</span> New Tab
+          <span>↗</span> ${securityT('New Tab')}
         </button>
       `;
     }
+
+    headerActions += (options.actions ?? [])
+      .map(
+        (action, index) =>
+          `<button class="levelup-dialog-action-btn" data-custom-action="${index}">${this.escapeHtml(action.label)}</button>`
+      )
+      .join('');
 
     const contentArea =
       finalLayoutMode === 'dual-pane'
@@ -1182,6 +1191,12 @@ export class TableDialog {
       backdrop?.remove();
       options.onClose?.();
     };
+
+    options.actions?.forEach((action, index) => {
+      backdrop
+        ?.querySelector(`[data-custom-action="${index}"]`)
+        ?.addEventListener('click', action.onClick);
+    });
 
     // Handle navigation links
     const navLinks = backdrop?.querySelectorAll('.levelup-table-nav-link');

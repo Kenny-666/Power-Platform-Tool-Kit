@@ -9,6 +9,8 @@ import { formActions, navigationActions, ActionConfig } from '#config/actions';
 import LanguageToggle from '#components/LanguageToggle';
 import { LocalizationProvider, useLocalization } from '#localization/LocalizationContext';
 import { getActionTranslation } from '#localization/i18n';
+import SecurityRoleMembershipDialog from '#components/SecurityRoleMembershipDialog';
+import RecordAccessAnalysisDialog from '#components/RecordAccessAnalysisDialog';
 
 const PopupApp: React.FC = () => {
   const { t, language } = useLocalization();
@@ -22,6 +24,11 @@ const PopupApp: React.FC = () => {
     message: string;
     severity: 'success' | 'info' | 'warning' | 'error';
   }>(null);
+
+  const [securityRoleLookupMode, setSecurityRoleLookupMode] = useState<
+    'users-to-roles' | 'roles-to-users' | null
+  >(null);
+  const [recordAccessAnalysisOpen, setRecordAccessAnalysisOpen] = useState(false);
 
   // Detect if running in Firefox
   const isFirefox =
@@ -59,15 +66,24 @@ const PopupApp: React.FC = () => {
     try {
       console.log('Executing action:', actionId);
 
+      if (actionId === 'admin:bulk-user-roles' || actionId === 'admin:bulk-role-users') {
+        setSecurityRoleLookupMode(
+          actionId === 'admin:bulk-user-roles' ? 'users-to-roles' : 'roles-to-users'
+        );
+        return;
+      }
+      if (actionId === 'form:analyze-record-access') {
+        setRecordAccessAnalysisOpen(true);
+        return;
+      }
+
       // Handle actions that require input with simple prompts
       let actionData: unknown = undefined;
 
       if (actionId === 'navigation:open-record-by-id') {
         const recordId = prompt(t('recordId'));
         if (!recordId) return; // User cancelled
-        const entityName = prompt(
-          t('entityName')
-        );
+        const entityName = prompt(t('entityName'));
         if (!entityName) return; // User cancelled
         actionData = { recordId: recordId.trim(), entityName: entityName.trim().toLowerCase() };
       } else if (actionId === 'navigation:new-record') {
@@ -174,6 +190,14 @@ const PopupApp: React.FC = () => {
         display: 'flex',
       }}
     >
+      <SecurityRoleMembershipDialog
+        mode={securityRoleLookupMode}
+        onClose={() => setSecurityRoleLookupMode(null)}
+      />
+      <RecordAccessAnalysisDialog
+        open={recordAccessAnalysisOpen}
+        onClose={() => setRecordAccessAnalysisOpen(false)}
+      />
       {/* Vertical Express Mode Label */}
       <Box
         sx={{
@@ -464,7 +488,6 @@ const PopupApp: React.FC = () => {
             </Box>
           </Box>
         )}
-
       </Box>
     </Box>
   );

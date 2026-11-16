@@ -371,6 +371,7 @@ export class DynamicsUtils {
     itemsPerPage?: number;
     showOpenInNewTab?: boolean;
     enableSearch?: boolean;
+    actions?: Array<{ label: string; onClick: () => void }>;
   }): void {
     const tables = config.tables || [];
 
@@ -394,6 +395,7 @@ export class DynamicsUtils {
       itemsPerPage: config.itemsPerPage,
       showOpenInNewTab: config.showOpenInNewTab,
       enableSearch: config.enableSearch,
+      actions: config.actions,
     });
   }
 

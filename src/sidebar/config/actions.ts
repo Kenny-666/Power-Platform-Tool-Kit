@@ -291,6 +291,15 @@ export const formActions: ActionConfig[] = [
     shortLabel: 'Lookups',
     shortIcon: '↗️',
   },
+  {
+    id: 'form:analyze-record-access',
+    label: 'Access Analysis',
+    icon: SecurityIcon,
+    tooltip: 'Analyze why a selected user can or cannot access the current record',
+    category: 'advanced',
+    shortLabel: 'Access',
+    shortIcon: '🔐',
+  },
 ];
 
 export const debuggingActions: ActionConfig[] = [

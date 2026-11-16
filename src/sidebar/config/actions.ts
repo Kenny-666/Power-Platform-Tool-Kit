@@ -48,6 +48,8 @@ import {
   NotificationsOff as NotificationsOffIcon,
   Refresh as RibbonRefreshIcon,
   Person as UserIcon,
+  ManageAccounts as UserRolesIcon,
+  Group as RoleUsersIcon,
 } from '@mui/icons-material';
 
 export interface ActionConfig {
@@ -367,6 +369,24 @@ export const debuggingActions: ActionConfig[] = [
 ];
 
 export const navigationActions: ActionConfig[] = [
+  {
+    id: 'admin:bulk-user-roles',
+    label: 'User Roles',
+    icon: UserRolesIcon,
+    tooltip: 'Select users and view their directly assigned security roles',
+    category: 'common',
+    shortLabel: 'User Roles',
+    shortIcon: '👥',
+  },
+  {
+    id: 'admin:bulk-role-users',
+    label: 'Role Users',
+    icon: RoleUsersIcon,
+    tooltip: 'Select security roles and view their directly assigned users',
+    category: 'common',
+    shortLabel: 'Role Users',
+    shortIcon: '🔐',
+  },
   {
     id: 'admin:get-user-info',
     label: 'Current User',

@@ -22,6 +22,7 @@ import MyCommands from '#components/MyCommands';
 import RecentlyUsed from '#components/RecentlyUsed';
 import InformationButton from '#components/InformationButton';
 import LanguageToggle from '#components/LanguageToggle';
+import SecurityRoleMembershipDialog from '#components/SecurityRoleMembershipDialog';
 import { LocalizationProvider, useLocalization } from '#localization/LocalizationContext';
 
 const isQueryResults = (value: unknown): value is QueryResults => {
@@ -73,6 +74,9 @@ const App: React.FC = () => {
   );
   const [favoriteIds, setFavoriteIds] = useState<DynamicsAction[]>([]);
   const [environmentUrl, setEnvironmentUrl] = useState<string>('');
+  const [securityRoleLookupMode, setSecurityRoleLookupMode] = useState<
+    'users-to-roles' | 'roles-to-users' | null
+  >(null);
 
   // Function to show inline alert for critical messages
   const showInlineAlert = (
@@ -251,10 +255,7 @@ const App: React.FC = () => {
     // Check if this is a form action and do basic validation
     if (id.startsWith('form:')) {
       if (!isConnected) {
-        showInlineAlert(
-          t('formActionsOnly'),
-          'warning'
-        );
+        showInlineAlert(t('formActionsOnly'), 'warning');
         return;
       }
     }
@@ -269,6 +270,12 @@ const App: React.FC = () => {
     if (id === 'navigation:open-record-by-id') {
       setDialogType('open-by-id');
       setInputDialogOpen(true);
+      return;
+    }
+    if (id === 'admin:bulk-user-roles' || id === 'admin:bulk-role-users') {
+      setSecurityRoleLookupMode(
+        id === 'admin:bulk-user-roles' ? 'users-to-roles' : 'roles-to-users'
+      );
       return;
     }
     if (id === 'navigation:new-record') {
@@ -301,7 +308,9 @@ const App: React.FC = () => {
         setToastOpen(true);
       }
     } catch (error) {
-      setToastMessage(t('actionError', { error: error instanceof Error ? error.message : t('unknownError') }));
+      setToastMessage(
+        t('actionError', { error: error instanceof Error ? error.message : t('unknownError') })
+      );
       setToastSeverity('error');
       setToastOpen(true);
     } finally {
@@ -424,7 +433,9 @@ const App: React.FC = () => {
         setToastOpen(true);
       }
     } catch (error) {
-      setToastMessage(t('actionError', { error: error instanceof Error ? error.message : t('unknownError') }));
+      setToastMessage(
+        t('actionError', { error: error instanceof Error ? error.message : t('unknownError') })
+      );
       setToastSeverity('error');
       setToastOpen(true);
     } finally {
@@ -596,6 +607,10 @@ const App: React.FC = () => {
         onRecordIdChange={setRecordId}
       />
       <QueryResultsDialog results={queryResults} onClose={() => setQueryResults(null)} />
+      <SecurityRoleMembershipDialog
+        mode={securityRoleLookupMode}
+        onClose={() => setSecurityRoleLookupMode(null)}
+      />
       <LoadingOverlay open={loadingOpen} />
       <Toast
         open={toastOpen}
@@ -655,4 +670,3 @@ if (container) {
 }
 
 export default App;
-

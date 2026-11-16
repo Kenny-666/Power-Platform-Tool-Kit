@@ -142,7 +142,10 @@ export class ActionHandlerRegistry {
       { action: 'navigation:open-mobile-client', contentScriptMethod: 'openMobileClient' },
       { action: 'navigation:open-solutions-history', contentScriptMethod: 'openSolutionsHistory' },
       { action: 'navigation:open-plugin-trace-logs', contentScriptMethod: 'openPluginTraceLogs' },
-      { action: 'navigation:open-environment-variables', contentScriptMethod: 'openEnvironmentVariables' },
+      {
+        action: 'navigation:open-environment-variables',
+        contentScriptMethod: 'openEnvironmentVariables',
+      },
       { action: 'navigation:import-solution', contentScriptMethod: 'openImportSolution' },
       {
         action: 'navigation:open-power-platform-admin',
@@ -174,6 +177,22 @@ export class ActionHandlerRegistry {
         dataExtractor: data => {
           const adminData = data as AdminData;
           return { query: adminData?.query };
+        },
+      },
+      {
+        action: 'admin:search-security-roles',
+        contentScriptMethod: 'searchSecurityRoles',
+        dataExtractor: data => {
+          const adminData = data as AdminData;
+          return { query: adminData?.query };
+        },
+      },
+      {
+        action: 'admin:get-security-role-memberships',
+        contentScriptMethod: 'getSecurityRoleMemberships',
+        dataExtractor: data => {
+          const adminData = data as AdminData;
+          return { mode: adminData?.mode, ids: adminData?.ids };
         },
       },
     ];

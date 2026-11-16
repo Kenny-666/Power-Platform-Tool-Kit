@@ -510,6 +510,26 @@ export class LevelUpExtension {
         } else {
           throw new Error('Invalid data for search-users action: query is required');
         }
+      case 'search-security-roles':
+        if (data && typeof data === 'object' && 'query' in data) {
+          const searchData = data as { query: string };
+          return await AdminActions.searchSecurityRoles(searchData.query);
+        }
+        throw new Error('Invalid data for search-security-roles action: query is required');
+      case 'get-security-role-memberships':
+        if (data && typeof data === 'object' && 'mode' in data && 'ids' in data) {
+          const membershipData = data as {
+            mode: 'users-to-roles' | 'roles-to-users';
+            ids: string[];
+          };
+          return await AdminActions.getSecurityRoleMemberships(
+            membershipData.mode,
+            membershipData.ids
+          );
+        }
+        throw new Error(
+          'Invalid data for get-security-role-memberships action: mode and ids are required'
+        );
       case 'start-impersonation':
       case 'stop-impersonation':
       case 'get-impersonation-status':

@@ -66,6 +66,10 @@ export type NavigationActionName =
 
 export type AdminActionName =
     | 'get-user-info'
+    | 'bulk-user-roles'
+    | 'bulk-role-users'
+    | 'search-security-roles'
+    | 'get-security-role-memberships'
     | 'check-user-privilege'
     | 'get-organization-settings'
     | 'get-client-info'
@@ -255,6 +259,8 @@ export interface NavigationData {
 export interface AdminData {
     privilegeName?: string;
     query?: string;
+    mode?: 'users-to-roles' | 'roles-to-users';
+    ids?: string[];
 }
 
 // Extend Window interface for custom properties

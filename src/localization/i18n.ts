@@ -42,6 +42,10 @@ export const translate = (language: Language, key: TranslationKey, values: Trans
   );
 
 const actionNames: Record<DynamicsAction, readonly [string, string, string, string]> = {
+  'admin:bulk-user-roles': ['User to Roles', '用户查角色', 'Select users and view their directly assigned security roles', '选择用户并查看其直接分配的安全角色'],
+  'admin:bulk-role-users': ['Role to Users', '角色查用户', 'Select security roles and view their directly assigned users', '选择安全角色并查看其直接分配的用户'],
+  'admin:search-security-roles': ['Search Security Roles', '搜索安全角色', 'Search security roles', '搜索安全角色'],
+  'admin:get-security-role-memberships': ['Security Role Memberships', '安全角色成员关系', 'Retrieve direct security-role memberships', '获取直接分配的安全角色成员关系'],
   'form:show-logical-names': ['Logical Names', '逻辑名称', 'Show logical names for all fields and tabs on the form', '显示表单中所有字段和选项卡的逻辑名称'],
   'form:clear-logical-names': ['Clear Names', '清除名称', 'Hide logical names and restore original field labels', '隐藏逻辑名称并恢复原始字段标签'],
   'form:god-mode': ['God Mode', '上帝模式', 'Make all fields visible and editable regardless of security roles', '忽略安全角色，使所有字段可见且可编辑'],
